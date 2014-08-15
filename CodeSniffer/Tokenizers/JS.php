@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -19,7 +19,7 @@
  * @category  PHP
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -159,6 +159,7 @@ class PHP_CodeSniffer_Tokenizers_JS
                               'try'       => 'T_TRY',
                               'catch'     => 'T_CATCH',
                               'return'    => 'T_RETURN',
+                              'throw'     => 'T_THROW',
                               'break'     => 'T_BREAK',
                               'switch'    => 'T_SWITCH',
                               'continue'  => 'T_CONTINUE',
@@ -481,14 +482,26 @@ class PHP_CodeSniffer_Tokenizers_JS
 
                         if (in_array(strtolower($charBuffer), $tokenTypes) === true) {
                             // We've found something larger that matches
-                            // so we can ignore this char.
-                            if (PHP_CODESNIFFER_VERBOSITY > 1) {
-                                $type = $this->tokenValues[strtolower($charBuffer)];
-                                echo "\t\t* look ahead found more specific token ($type), ignoring $i *".PHP_EOL;
-                            }
+                            // so we can ignore this char. Except for 1 very specific
+                            // case where a comment like /**/ needs to tokenize as
+                            // T_COMMENT and not T_DOC_COMMENT.
+                            $oldType = $this->tokenValues[strtolower($buffer)];
+                            $newType = $this->tokenValues[strtolower($charBuffer)];
+                            if ($oldType === 'T_COMMENT'
+                                && $newType === 'T_DOC_COMMENT'
+                                && $chars[($i + $x + 1)] === '/'
+                            ) {
+                                if (PHP_CODESNIFFER_VERBOSITY > 1) {
+                                    echo "\t\t* look ahead ignored T_DOC_COMMENT, continuing *".PHP_EOL;
+                                }
+                            } else {
+                                if (PHP_CODESNIFFER_VERBOSITY > 1) {
+                                    echo "\t\t* look ahead found more specific token ($newType), ignoring $i *".PHP_EOL;
+                                }
 
-                            $matchedToken = true;
-                            break;
+                                $matchedToken = true;
+                                break;
+                            }
                         }
                     }//end for
                 }//end if
@@ -663,14 +676,8 @@ class PHP_CodeSniffer_Tokenizers_JS
             }
         }//end foreach
 
-        // Trim the last newline off the end of the buffer before
-        // adding it's contents to the token stack.
-        // This is so we don't count the very final newline of a file.
-        $buffer = substr($buffer, 0, -1);
-
         if (empty($buffer) === false) {
-            // Buffer contians whitespace from the end of the file, and not
-            // just the final newline.
+            // Buffer contains whitespace from the end of the file.
             $tokens[] = array(
                          'code'    => T_WHITESPACE,
                          'type'    => 'T_WHITESPACE',
@@ -752,7 +759,7 @@ class PHP_CodeSniffer_Tokenizers_JS
             /*
                 If this token has newlines in its content, split each line up
                 and create a new token for each line. We do this so it's easier
-                to asertain where errors occur on a line.
+                to ascertain where errors occur on a line.
                 Note that $token[1] is the token's content.
             */
 
@@ -848,13 +855,13 @@ class PHP_CodeSniffer_Tokenizers_JS
                         );
 
         $afterTokens = array(
-                         ',',
-                         ')',
-                         ';',
-                         ' ',
-                         '.',
-                         $eolChar,
-                        );
+                        ',',
+                        ')',
+                        ';',
+                        ' ',
+                        '.',
+                        $eolChar,
+                       );
 
         // Find the last non-whitespace token that was added
         // to the tokens array.
@@ -1062,6 +1069,14 @@ class PHP_CodeSniffer_Tokenizers_JS
                 // Make sure this is not part of an inline IF statement.
                 for ($x = ($i - 1); $x >= 0; $x--) {
                     if ($tokens[$x]['code'] === T_INLINE_THEN) {
+                        $tokens[$i]['code'] = T_INLINE_ELSE;
+                        $tokens[$i]['type'] = 'T_INLINE_ELSE';
+
+                        if (PHP_CODESNIFFER_VERBOSITY > 1) {
+                            echo str_repeat("\t", count($classStack));
+                            echo "\t* token $i converted from T_COLON to T_INLINE_THEN *".PHP_EOL;
+                        }
+
                         continue(2);
                     } else if ($tokens[$x]['line'] < $tokens[$i]['line']) {
                         break;

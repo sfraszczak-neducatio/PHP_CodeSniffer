@@ -23,4 +23,28 @@ do {
 if(true)
   $someObject->{$name};
 
+if (true) :
+    $foo = true;
+endif;
+
+while (true) :
+    $foo = true;
+endwhile;
+
+for ($i; $i > 0; $i--) :
+    echo 'hello';
+endfor;
+
+foreach ($array as $element) :
+    echo 'hello';
+endforeach;
+
+if ($foo) :
+    echo 'true';
+elseif ($something) :
+    echo 'foo';
+else:
+    echo 'false';
+endif;
+
 ?>

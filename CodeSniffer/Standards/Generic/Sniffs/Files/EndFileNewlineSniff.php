@@ -7,7 +7,7 @@
  * @category  PHP
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -20,13 +20,25 @@
  * @category  PHP
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
 class Generic_Sniffs_Files_EndFileNewlineSniff implements PHP_CodeSniffer_Sniff
 {
+
+    /**
+     * A list of tokenizers this sniff supports.
+     *
+     * @var array
+     */
+    public $supportedTokenizers = array(
+                                   'PHP',
+                                   'JS',
+                                   'CSS',
+                                  );
+
 
     /**
      * Returns an array of tokens this test wants to listen for.
@@ -62,11 +74,17 @@ class Generic_Sniffs_Files_EndFileNewlineSniff implements PHP_CodeSniffer_Sniff
         $tokens   = $phpcsFile->getTokens();
         $stackPtr = ($phpcsFile->numTokens - 1);
 
+        if ($phpcsFile->tokenizerType === 'JS') {
+            $stackPtr--;
+        } else if ($phpcsFile->tokenizerType === 'CSS') {
+            $stackPtr -= 2;
+        }
+
         $eolCharLen = strlen($phpcsFile->eolChar);
         $lastChars  = substr($tokens[$stackPtr]['content'], ($eolCharLen * -1));
         if ($lastChars !== $phpcsFile->eolChar) {
-            $error = 'All PHP files must end with a newline character';
-            $phpcsFile->addError($error, $stackPtr);
+            $error = 'File must end with a newline character';
+            $phpcsFile->addError($error, $stackPtr, 'NotFound');
         }
 
     }//end process()

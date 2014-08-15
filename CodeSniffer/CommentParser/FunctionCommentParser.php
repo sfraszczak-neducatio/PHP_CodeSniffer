@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -40,7 +40,7 @@ if (class_exists('PHP_CodeSniffer_CommentParser_SingleElement', true) === false)
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -86,7 +86,7 @@ class PHP_CodeSniffer_CommentParser_FunctionCommentParser extends PHP_CodeSniffe
     /**
      * Parses parameter elements.
      *
-     * @param array(string) $tokens The tokens that conmpise this sub element.
+     * @param array(string) $tokens The tokens that comprise this sub element.
      *
      * @return PHP_CodeSniffer_CommentParser_ParameterElement
      */
@@ -107,7 +107,7 @@ class PHP_CodeSniffer_CommentParser_FunctionCommentParser extends PHP_CodeSniffe
     /**
      * Parses return elements.
      *
-     * @param array(string) $tokens The tokens that conmpise this sub element.
+     * @param array(string) $tokens The tokens that comprise this sub element.
      *
      * @return PHP_CodeSniffer_CommentParser_PairElement
      */
@@ -129,7 +129,7 @@ class PHP_CodeSniffer_CommentParser_FunctionCommentParser extends PHP_CodeSniffe
     /**
      * Parses throws elements.
      *
-     * @param array(string) $tokens The tokens that conmpise this sub element.
+     * @param array(string) $tokens The tokens that comprise this sub element.
      *
      * @return PHP_CodeSniffer_CommentParser_PairElement
      */
@@ -164,7 +164,7 @@ class PHP_CodeSniffer_CommentParser_FunctionCommentParser extends PHP_CodeSniffe
 
 
     /**
-     * Returns the return element in this fucntion comment.
+     * Returns the return element in this function comment.
      *
      * Returns null if no return element exists in the comment.
      *
@@ -178,7 +178,7 @@ class PHP_CodeSniffer_CommentParser_FunctionCommentParser extends PHP_CodeSniffe
 
 
     /**
-     * Returns the throws elements in this fucntion comment.
+     * Returns the throws elements in this function comment.
      *
      * Returns empty array if no throws elements in the comment.
      *

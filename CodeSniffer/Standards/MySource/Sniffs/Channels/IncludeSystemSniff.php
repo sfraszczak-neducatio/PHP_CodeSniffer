@@ -7,7 +7,7 @@
  * @category  PHP
  * @package   PHP_CodeSniffer_MySource
  * @author    Greg Sherwood <gsherwood@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -23,7 +23,7 @@ if (class_exists('PHP_CodeSniffer_Standards_AbstractScopeSniff', true) === false
  * @category  PHP
  * @package   PHP_CodeSniffer_MySource
  * @author    Greg Sherwood <gsherwood@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -38,6 +38,7 @@ class MySource_Sniffs_Channels_IncludeSystemSniff extends PHP_CodeSniffer_Standa
      */
     private $_ignore = array(
                         'self',
+                        'static',
                         'parent',
                         'channels',
                         'basesystem',
@@ -89,6 +90,12 @@ class MySource_Sniffs_Channels_IncludeSystemSniff extends PHP_CodeSniffer_Standa
             null,
             true
         );
+
+        // Don't process class names represented by variables as this can be
+        // an inexact science.
+        if ($tokens[$classNameToken]['code'] === T_VARIABLE) {
+            return;
+        }
 
         $className = $tokens[$classNameToken]['content'];
         if (in_array(strtolower($className), $this->_ignore) === true) {
@@ -154,7 +161,7 @@ class MySource_Sniffs_Channels_IncludeSystemSniff extends PHP_CodeSniffer_Standa
             if ($name !== false) {
                 $includedClasses[] = $name;
             }
-        }//end for
+        }
 
         // If we are in a testing class, we might have also included
         // some systems and classes in our setUp() method.
@@ -222,9 +229,14 @@ class MySource_Sniffs_Channels_IncludeSystemSniff extends PHP_CodeSniffer_Standa
             $className      = $tokens[$classNameToken]['content'];
         } else {
             // Determine the name of the class that the static function
-            // is being called on.
+            // is being called on. But don't process class names represented by
+            // variables as this can be an inexact science.
             $classNameToken = $phpcsFile->findPrevious(T_WHITESPACE, ($stackPtr - 1), null, true);
-            $className      = $tokens[$classNameToken]['content'];
+            if ($tokens[$classNameToken]['code'] === T_VARIABLE) {
+                return;
+            }
+
+            $className = $tokens[$classNameToken]['content'];
         }
 
         // Some systems are always available.

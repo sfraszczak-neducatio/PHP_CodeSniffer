@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -23,7 +23,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -63,10 +63,29 @@ class Squiz_Sniffs_PHP_NonExecutableCodeSniff implements PHP_CodeSniffer_Sniff
     {
         $tokens = $phpcsFile->getTokens();
 
-        // If this token is preceeded with an "or", it only relates to one line
-        // and should be ignore. For example: fopen() or die().
+        // If this token is preceded with an "or", it only relates to one line
+        // and should be ignored. For example: fopen() or die().
         $prev = $phpcsFile->findPrevious(PHP_CodeSniffer_Tokens::$emptyTokens, ($stackPtr - 1), null, true);
         if ($tokens[$prev]['code'] === T_LOGICAL_OR) {
+            return;
+        }
+
+        // Check if this token is actually part of a one-line IF or ELSE statement.
+        for ($i = ($stackPtr - 1); $i > 0; $i--) {
+            if ($tokens[$i]['code'] === T_CLOSE_PARENTHESIS) {
+                $i = $tokens[$i]['parenthesis_opener'];
+                continue;
+            } else if (in_array($tokens[$i]['code'], PHP_CodeSniffer_Tokens::$emptyTokens) === true) {
+                continue;
+            }
+
+            break;
+        }
+
+        if ($tokens[$i]['code'] === T_IF
+            || $tokens[$i]['code'] === T_ELSE
+            || $tokens[$i]['code'] === T_ELSEIF
+        ) {
             return;
         }
 
@@ -95,12 +114,17 @@ class Squiz_Sniffs_PHP_NonExecutableCodeSniff implements PHP_CodeSniffer_Sniff
                 // so any code between this token and the next CASE, DEFAULT or
                 // end of SWITCH token will not be executable.
                 $next = $phpcsFile->findNext(
-                    array(T_CASE, T_DEFAULT, T_CLOSE_CURLY_BRACKET),
+                    array(
+                     T_CASE,
+                     T_DEFAULT,
+                     T_CLOSE_CURLY_BRACKET,
+                    ),
                     ($stackPtr + 1)
                 );
 
                 if ($next !== false) {
-                    $lastLine = $tokens[($stackPtr + 1)]['line'];
+                    $end      = $phpcsFile->findNext(array(T_SEMICOLON), ($stackPtr + 1));
+                    $lastLine = $tokens[$end]['line'];
                     for ($i = ($stackPtr + 1); $i < $next; $i++) {
                         if (in_array($tokens[$i]['code'], PHP_CodeSniffer_Tokens::$emptyTokens) === true) {
                             continue;
@@ -202,10 +226,15 @@ class Squiz_Sniffs_PHP_NonExecutableCodeSniff implements PHP_CodeSniffer_Sniff
                 continue;
             }
 
+            if ($tokens[$start]['code'] === T_OPEN_CURLY_BRACKET) {
+                $start = $tokens[$start]['bracket_closer'];
+                continue;
+            }
+
             if ($tokens[$start]['code'] === T_SEMICOLON) {
                 break;
             }
-        }
+        }//end for
 
         $lastLine = $tokens[$start]['line'];
         for ($i = ($start + 1); $i < $end; $i++) {

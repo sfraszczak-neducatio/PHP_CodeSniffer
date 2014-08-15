@@ -64,4 +64,50 @@ class MyClass {
 
 MyClass::walk();
 
-?>
+class Controller
+{
+    public function Action()
+    {
+        Doctrine\Common\Util\Debug::dump();
+    }
+}
+
+namespace TYPO3\CMS\Reports;
+
+class Status {
+    const NOTICE = -2;
+    const INFO = -1;
+    const OK = 0;
+    const WARNING = 1;
+    const ERROR = 2;
+}
+
+namespace TYPO3\CMS\Reports\Report\Status;
+
+class Status implements \TYPO3\CMS\Reports\ReportInterface {
+    public function getHighestSeverity(array $statusCollection) {
+        $highestSeverity = \TYPO3\CMS\Reports\Status::NOTICE;
+    }
+}
+
+namespace Foo;
+
+class Bar {
+
+    function myFunction()
+    {
+        \Foo\Whatever::something();
+        \Foo\Bar::something();
+    }
+}
+
+namespace Foo\Bar;
+
+class Baz {
+
+    function myFunction()
+    {
+        \Foo\Bar\Whatever::something();
+        \Foo\Bar\Baz::something();
+    }
+}

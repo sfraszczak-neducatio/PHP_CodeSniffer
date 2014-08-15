@@ -7,7 +7,7 @@
  * @category  PHP
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -20,13 +20,20 @@
  * @category  PHP
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
 class PEAR_Sniffs_Functions_FunctionDeclarationSniff implements PHP_CodeSniffer_Sniff
 {
+
+    /**
+     * The number of spaces code should be indented.
+     *
+     * @var int
+     */
+    public $indent = 4;
 
 
     /**
@@ -105,7 +112,7 @@ class PEAR_Sniffs_Functions_FunctionDeclarationSniff implements PHP_CodeSniffer_
         }//end if
 
         // Check if this is a single line or multi-line declaration.
-        $singleLine = false;
+        $singleLine = true;
         if ($tokens[$openBracket]['line'] === $tokens[$closeBracket]['line']) {
             // Closures may use the USE keyword and so be multi-line in this way.
             if ($tokens[$stackPtr]['code'] === T_CLOSURE) {
@@ -114,13 +121,13 @@ class PEAR_Sniffs_Functions_FunctionDeclarationSniff implements PHP_CodeSniffer_
                     // are also on the same line, this is a single line declaration.
                     $open  = $phpcsFile->findNext(T_OPEN_PARENTHESIS, ($use + 1));
                     $close = $tokens[$open]['parenthesis_closer'];
-                    if ($tokens[$open]['line'] === $tokens[$close]['line']) {
-                        $singleLine = true;
+                    if ($tokens[$open]['line'] !== $tokens[$close]['line']) {
+                        $singleLine = false;
                     }
                 }
-            } else {
-                $singleLine = true;
             }
+        } else {
+            $singleLine = false;
         }
 
         if ($singleLine === true) {
@@ -243,13 +250,14 @@ class PEAR_Sniffs_Functions_FunctionDeclarationSniff implements PHP_CodeSniffer_
             if ($tokens[$i]['line'] !== $lastLine) {
                 if ($i === $tokens[$stackPtr]['parenthesis_closer']
                     || ($tokens[$i]['code'] === T_WHITESPACE
-                    && ($i + 1) === $tokens[$stackPtr]['parenthesis_closer'])
+                    && (($i + 1) === $closeBracket
+                    || ($i + 1) === $tokens[$stackPtr]['parenthesis_closer']))
                 ) {
                     // Closing braces need to be indented to the same level
                     // as the function.
                     $expectedIndent = $functionIndent;
                 } else {
-                    $expectedIndent = ($functionIndent + 4);
+                    $expectedIndent = ($functionIndent + $this->indent);
                 }
 
                 // We changed lines, so this should be a whitespace indent token.
@@ -271,9 +279,14 @@ class PEAR_Sniffs_Functions_FunctionDeclarationSniff implements PHP_CodeSniffer_
                 $lastLine = $tokens[$i]['line'];
             }//end if
 
-            if ($tokens[$i]['code'] === T_ARRAY) {
+            if ($tokens[$i]['code'] === T_ARRAY || $tokens[$i]['code'] === T_OPEN_SHORT_ARRAY) {
                 // Skip arrays as they have their own indentation rules.
-                $i        = $tokens[$i]['parenthesis_closer'];
+                if ($tokens[$i]['code'] === T_OPEN_SHORT_ARRAY) {
+                    $i = $tokens[$i]['bracket_closer'];
+                } else {
+                    $i = $tokens[$i]['parenthesis_closer'];
+                }
+
                 $lastLine = $tokens[$i]['line'];
                 continue;
             }

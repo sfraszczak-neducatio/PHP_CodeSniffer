@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -23,7 +23,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -38,17 +38,24 @@ class Squiz_Tests_Classes_LowercaseClassKeywordsUnitTest extends AbstractSniffUn
      * The key of the array should represent the line number and the value
      * should represent the number of errors that should occur on that line.
      *
-     * @return array(int => int)
+     * @return array<int, int>
      */
     public function getErrorList()
     {
-        return array(
-                2 => 3,
-                3 => 3,
-                4 => 1,
-                8 => 1,
-                9 => 1,
-               );
+        $errors = array(
+                   2  => 3,
+                   3  => 3,
+                   4  => 1,
+                   9  => 1,
+                   10 => 1,
+                  );
+
+        // The trait test will only work in PHP versions where traits exist.
+        if (version_compare(PHP_VERSION, '5.4.0') >= 0) {
+            $errors[5] = 1;
+        }
+
+        return $errors;
 
     }//end getErrorList()
 
@@ -59,7 +66,7 @@ class Squiz_Tests_Classes_LowercaseClassKeywordsUnitTest extends AbstractSniffUn
      * The key of the array should represent the line number and the value
      * should represent the number of warnings that should occur on that line.
      *
-     * @return array(int => int)
+     * @return array<int, int>
      */
     public function getWarningList()
     {

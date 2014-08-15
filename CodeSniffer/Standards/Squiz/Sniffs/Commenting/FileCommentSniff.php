@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -36,7 +36,7 @@ if (class_exists('PHP_CodeSniffer_CommentParser_ClassCommentParser', true) === f
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -222,9 +222,9 @@ class Squiz_Sniffs_Commenting_FileCommentSniff implements PHP_CodeSniffer_Sniff
             $newlineCount += $newlineBetween;
 
             $testLong = trim($long);
-            if (preg_match('|[A-Z]|', $testLong[0]) === 0) {
+            if (preg_match('|\p{Lu}|u', $testLong[0]) === 0) {
                 $error = 'File comment long description must start with a capital letter';
-                $phpcsFile->addError($error, ($commentStart + $newlineCount), 'LongNotCaptial');
+                $phpcsFile->addError($error, ($commentStart + $newlineCount), 'LongNotCapital');
             }
         }//end if
 
@@ -255,7 +255,7 @@ class Squiz_Sniffs_Commenting_FileCommentSniff implements PHP_CodeSniffer_Sniff
                 $phpcsFile->addError($error, ($commentStart + 1), 'ShortSingleLine');
             }
 
-            if (preg_match('|[A-Z]|', $testShort[0]) === 0) {
+            if (preg_match('|\p{Lu}|u', $testShort[0]) === 0) {
                 $error = 'File comment short description must start with a capital letter';
                 $phpcsFile->addError($error, ($commentStart + 1), 'ShortNotCapital');
             }
@@ -265,15 +265,6 @@ class Squiz_Sniffs_Commenting_FileCommentSniff implements PHP_CodeSniffer_Sniff
                 $phpcsFile->addError($error, ($commentStart + 1), 'ShortFullStop');
             }
         }//end if
-
-        // Check for unknown/deprecated tags.
-        $unknownTags = $this->commentParser->getUnknown();
-        foreach ($unknownTags as $errorTag) {
-            // Unknown tags are not parsed, do not process further.
-            $error = '@%s tag is not allowed in file comment';
-            $data  = array($errorTag['tag']);
-            $phpcsFile->addWarning($error, ($commentStart + $errorTag['line']), 'TagNotAllowed', $data);
-        }
 
         // Check each tag.
         $this->processTags($commentStart, $commentEnd);
@@ -310,7 +301,6 @@ class Squiz_Sniffs_Commenting_FileCommentSniff implements PHP_CodeSniffer_Sniff
                  'subpackage' => 'follows @package',
                  'author'     => 'follows @subpackage',
                  'copyright'  => 'follows @author',
-                 'license'    => 'follows @copyright',
                 );
 
         $foundTags   = $this->commentParser->getTagOrders();
@@ -324,7 +314,7 @@ class Squiz_Sniffs_Commenting_FileCommentSniff implements PHP_CodeSniffer_Sniff
             if (in_array($tag, $foundTags) === false) {
                 $error = 'Missing @%s tag in file comment';
                 $data  = array($tag);
-                $this->currentFile->addError($error, $commentEnd, 'MissingTag', $data);
+                $this->currentFile->addError($error, $commentEnd, 'Missing'.ucfirst($tag).'Tag', $data);
                 continue;
             }
 
@@ -351,7 +341,7 @@ class Squiz_Sniffs_Commenting_FileCommentSniff implements PHP_CodeSniffer_Sniff
             if (count($foundIndexes) > 1) {
                 $error = 'Only 1 @%s tag is allowed in file comment';
                 $data  = array($tag);
-                $this->currentFile->addError($error, $errorPos, 'DuplicateTag', $data);
+                $this->currentFile->addError($error, $errorPos, 'Duplicate'.ucfirst($tag).'Tag', $data);
             }
 
             // Check tag order.
@@ -363,7 +353,7 @@ class Squiz_Sniffs_Commenting_FileCommentSniff implements PHP_CodeSniffer_Sniff
                           $tag,
                           $orderText,
                          );
-                $this->currentFile->addError($error, $errorPos, 'TagOrder', $data);
+                $this->currentFile->addError($error, $errorPos, ucfirst($tag).'TagOrder', $data);
             }
 
             // Store the indentation of each tag.
@@ -403,7 +393,7 @@ class Squiz_Sniffs_Commenting_FileCommentSniff implements PHP_CodeSniffer_Sniff
                              $expected,
                              $space,
                             );
-                $this->currentFile->addError($error, $indentInfo['errorPos'], 'TagIndent', $data);
+                $this->currentFile->addError($error, $indentInfo['errorPos'], ucfirst($indentInfo['tag']).'TagIndent', $data);
             }
         }
 
@@ -559,53 +549,13 @@ class Squiz_Sniffs_Commenting_FileCommentSniff implements PHP_CodeSniffer_Sniff
                 $error = 'Content missing for @copyright tag in file comment';
                 $this->currentFile->addError($error, $errorPos, 'MissingCopyright');
 
-            } else if (preg_match('/^([0-9]{4})(-[0-9]{4})? (Squiz Pty Ltd \(ACN 084 670 600\))$/', $content) === 0) {
-                $error = 'Expected "xxxx-xxxx Squiz Pty Ltd (ACN 084 670 600)" for copyright declaration';
+            } else if (preg_match('/^([0-9]{4})(-[0-9]{4})? (Squiz Pty Ltd \(ABN 77 084 670 600\))$/', $content) === 0) {
+                $error = 'Expected "xxxx-xxxx Squiz Pty Ltd (ABN 77 084 670 600)" for copyright declaration';
                 $this->currentFile->addError($error, $errorPos, 'IncorrectCopyright');
             }
         }
 
     }//end processCopyrights()
-
-
-    /**
-     * License tag must be 'http://matrix.squiz.net/licence Squiz.Net Open Source Licence'.
-     *
-     * @param int $errorPos The line number where the error occurs.
-     *
-     * @return void
-     */
-    protected function processLicense($errorPos)
-    {
-        $license = $this->commentParser->getLicense();
-        if ($license !== null) {
-            $url     = $license->getValue();
-            $content = $license->getComment();
-            if (empty($url) === true && empty($content) === true) {
-                $error = 'Content missing for @license tag in file comment';
-                $this->currentFile->addError($error, $errorPos, 'MissingLicense');
-            } else {
-                // Check for license URL.
-                if (empty($url) === true) {
-                    $error = 'License URL missing for @license tag in file comment';
-                    $this->currentFile->addError($error, $errorPos, 'MissingLinceseURL');
-                } else if ($url !== 'http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt') {
-                    $error = 'Expected "http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt" for license URL';
-                    $this->currentFile->addError($error, $errorPos, 'IncorrectLicenseURL');
-                }
-
-                // Check for license name.
-                if (empty($content) === true) {
-                    $error = 'License name missing for @license tag in file comment';
-                    $this->currentFile->addError($error, $errorPos, 'MissingLinceseName');
-                } else if ($content !== 'GPLv2') {
-                    $error = 'Expected "GPLv2" for license name';
-                    $this->currentFile->addError($error, $errorPos, 'IncorrectLicenseName');
-                }
-            }//end if
-        }//end if
-
-    }//end processLicense()
 
 
 }//end class

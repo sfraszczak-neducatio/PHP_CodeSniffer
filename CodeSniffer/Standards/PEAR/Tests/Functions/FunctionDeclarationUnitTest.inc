@@ -67,7 +67,19 @@ function validateUrl(
     array $allowedSchemes=array(
                            'http',
                            'https',
-                          )
+                          ),
+    array $notAllowedSchemes=array('ftp', 'sftp')
+) {
+}
+
+function validateUrlShort(
+    $url,
+    $requireScheme=TRUE,
+    array $allowedSchemes=[
+        'http',
+        'https',
+    ],
+    array $notAllowedSchemes=['ftp', 'sftp']
 ) {
 }
 
@@ -109,4 +121,19 @@ $longArgs_longVars = function (
     $muchLongerVar3) {
     // body
 };
+
+function test()
+{
+    $longArgs_longVars = function (
+        $longArgument,
+        $longerArgument,
+        $muchLongerArgument
+    ) use (
+        $longVar1,
+        $longerVar2,
+        $muchLongerVar3
+    ) {
+        // body
+    };
+}
 ?>

@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -42,7 +42,7 @@ if (class_exists('PHP_CodeSniffer_CommentParser_FunctionCommentParser', true) ==
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -58,7 +58,7 @@ class Squiz_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_Sn
     private $_methodName = '';
 
     /**
-     * The position in the stack where the fucntion token was found.
+     * The position in the stack where the function token was found.
      *
      * @var int
      */
@@ -249,7 +249,7 @@ class Squiz_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_Sn
             $newlineCount += $newlineBetween;
 
             $testLong = trim($long);
-            if (preg_match('|[A-Z]|', $testLong[0]) === 0) {
+            if (preg_match('|\p{Lu}|u', $testLong[0]) === 0) {
                 $error = 'Function comment long description must start with a capital letter';
                 $phpcsFile->addError($error, ($commentStart + $newlineCount), 'LongNotCapital');
             }
@@ -278,7 +278,7 @@ class Squiz_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_Sn
             $phpcsFile->addError($error, ($commentStart + 1), 'ShortSingleLine');
         }
 
-        if (preg_match('|[A-Z]|', $testShort[0]) === 0) {
+        if (preg_match('|\p{Lu}|u', $testShort[0]) === 0) {
             $error = 'Function comment short description must start with a capital letter';
             $phpcsFile->addError($error, ($commentStart + 1), 'ShortNotCapital');
         }
@@ -420,9 +420,21 @@ class Squiz_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_Sn
                     // no return statement in the function.
                     if ($content === 'void') {
                         if (isset($tokens[$this->_functionToken]['scope_closer']) === true) {
-                            $endToken    = $tokens[$this->_functionToken]['scope_closer'];
-                            $returnToken = $this->currentFile->findNext(T_RETURN, $this->_functionToken, $endToken);
-                            if ($returnToken !== false) {
+                            $endToken = $tokens[$this->_functionToken]['scope_closer'];
+
+                            $tokens = $this->currentFile->getTokens();
+                            for ($returnToken = $this->_functionToken; $returnToken < $endToken; $returnToken++) {
+                                if ($tokens[$returnToken]['code'] === T_CLOSURE) {
+                                    $returnToken = $tokens[$returnToken]['scope_closer'];
+                                    continue;
+                                }
+
+                                if ($tokens[$returnToken]['code'] === T_RETURN) {
+                                    break;
+                                }
+                            }
+
+                            if ($returnToken !== $endToken) {
                                 // If the function is not returning anything, just
                                 // exiting, then there is no problem.
                                 $semicolon = $this->currentFile->findNext(T_WHITESPACE, ($returnToken + 1), null, true);
@@ -640,6 +652,8 @@ class Squiz_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_Sn
                         $suggestedTypeHint = '';
                         if (strpos($suggestedName, 'array') !== false) {
                             $suggestedTypeHint = 'array';
+                        } else if (strpos($suggestedName, 'callable') !== false) {
+                            $suggestedTypeHint = 'callable';
                         } else if (in_array($typeName, PHP_CodeSniffer::$allowedTypes) === false) {
                             $suggestedTypeHint = $suggestedName;
                         }
@@ -693,9 +707,9 @@ class Squiz_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_Sn
                     if ($realName !== $paramName) {
                         $code = 'ParamNameNoMatch';
                         $data = array(
-                                    $paramName,
-                                    $realName,
-                                    $pos,
+                                 $paramName,
+                                 $realName,
+                                 $pos,
                                 );
 
                         $error  = 'Doc comment for var %s does not match ';
@@ -735,7 +749,7 @@ class Squiz_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_Sn
                     // Param comments must start with a capital letter and
                     // end with the full stop.
                     $firstChar = $paramComment{0};
-                    if (preg_match('|[A-Z]|', $firstChar) === 0) {
+                    if (preg_match('|\p{Lu}|u', $firstChar) === 0) {
                         $error = 'Param comment must start with a capital letter';
                         $this->currentFile->addError($error, $errorPos, 'ParamCommentNotCapital');
                     }
@@ -795,12 +809,6 @@ class Squiz_Sniffs_Commenting_FunctionCommentSniff implements PHP_CodeSniffer_Sn
      */
     protected function processUnknownTags($commentStart, $commentEnd)
     {
-        $unknownTags = $this->commentParser->getUnknown();
-        foreach ($unknownTags as $errorTag) {
-            $error = '@%s tag is not allowed in function comment';
-            $data  = array($errorTag['tag']);
-            $this->currentFile->addWarning($error, ($commentStart + $errorTag['line']), 'TagNotAllowed', $data);
-        }
 
     }//end processUnknownTags
 

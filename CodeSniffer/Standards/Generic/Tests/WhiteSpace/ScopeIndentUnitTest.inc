@@ -410,4 +410,83 @@ and the ending STRING on the next line is reported as having to be indented.
 STRING
     );
 }
+
+$var = call_user_func(
+    $new_var = function () use (&$a) {
+        if ($a > 0) {
+            return $a++;
+        } else {
+            return $a--;
+        }
+    }
+);
+
+class AnonymousFn
+{
+    public function getAnonFn()
+    {
+        return array(
+            'functions' => Array(
+                'function1' => function ($a, $b, $c) {
+                    $a = $b + $c;
+                    $b = $c / 2;
+                    return Array($a, $b, $c);
+                },
+            ),
+        );
+    }
+}
 ?>
+
+<div>
+    <?php
+    if ($myvar == 'test') {
+        echo 'something';
+    }
+    ?>
+<div>
+<div>
+    <?php
+        if ($myvar == 'test') {
+            echo 'something';
+        }
+    ?>
+<div>
+<div>
+    <?php
+if ($myvar == 'test') {
+    echo 'something';
+}
+    ?>
+<div>
+<body>
+    <?php
+    if (isset($_GET["test"])) {
+        if ($_GET["test"] <> "") {
+            $test = true;
+        } else {
+            $test = true;
+        }
+    }
+    ?>
+</body>
+<?php
+if (true) {
+    ?>
+    <div>
+        <div>
+            <div>
+            <?php
+                if (true) {
+                    echo 'hello';
+                } else {
+                    echo 'goodbye';
+                }
+            ?>
+            </div>
+        </div>
+    </div>
+    <?php
+} else {
+    echo 'else';
+}

@@ -84,7 +84,7 @@ if ($condition1
     || $condition2
     || $condition3
 ) {
-} else if (
+} elseif (
     $condition1
    || $condition2 &&
     $condition3
@@ -136,4 +136,8 @@ if (array_key_exists($key, $value)
     )
 ) {
 }
+
+if (true) :
+    $foo = true;
+endif;
 ?>

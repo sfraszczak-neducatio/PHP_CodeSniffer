@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -27,7 +27,7 @@ if (class_exists('PHP_CodeSniffer_Standards_IncorrectPatternException', true) ==
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -66,7 +66,7 @@ abstract class PHP_CodeSniffer_Standards_AbstractPatternSniff implements PHP_Cod
     private $_supplementaryTokens = array();
 
     /**
-     * Positions in the stack where errors have occured.
+     * Positions in the stack where errors have occurred.
      *
      * @var array()
      */
@@ -96,7 +96,7 @@ abstract class PHP_CodeSniffer_Standards_AbstractPatternSniff implements PHP_Cod
      * Classes extending <i>AbstractPatternTest</i> should implement the
      * <i>getPatterns()</i> method to register the patterns they wish to test.
      *
-     * @return array(int)
+     * @return int[]
      * @see process()
      */
     public final function register()
@@ -146,7 +146,7 @@ abstract class PHP_CodeSniffer_Standards_AbstractPatternSniff implements PHP_Cod
      * @param array $pattern The parsed pattern to find the acquire the token
      *                       types from.
      *
-     * @return array(int => int)
+     * @return array<int, int>
      */
     private function _getPatternTokenTypes($pattern)
     {
@@ -270,7 +270,7 @@ abstract class PHP_CodeSniffer_Standards_AbstractPatternSniff implements PHP_Cod
      * @param int                  $stackPtr    The postion in the tokens stack where
      *                                          the listening token type was found.
      *
-     * @return array(errors)
+     * @return array
      */
     protected function processPattern(
         $patternInfo,
@@ -409,7 +409,9 @@ abstract class PHP_CodeSniffer_Standards_AbstractPatternSniff implements PHP_Cod
                             // This may just be an indent that comes after a newline
                             // so check the token before to make sure. If it is a newline, we
                             // can ignore the error here.
-                            if ($tokens[($stackPtr - 1)]['content'] !== $phpcsFile->eolChar) {
+                            if (($tokens[($stackPtr - 1)]['content'] !== $phpcsFile->eolChar)
+                                && ($this->ignoreComments === true && in_array($tokens[($stackPtr - 1)]['code'], PHP_CodeSniffer_Tokens::$commentTokens) === false)
+                            ) {
                                 $hasError = true;
                             } else {
                                 $stackPtr--;
@@ -719,6 +721,7 @@ abstract class PHP_CodeSniffer_Standards_AbstractPatternSniff implements PHP_Cod
         $found    = str_replace("\r\n", '\n', $found);
         $found    = str_replace("\n", '\n', $found);
         $found    = str_replace("\r", '\n', $found);
+        $found    = str_replace("\t", '\t', $found);
         $found    = str_replace('EOL', '\n', $found);
         $expected = str_replace('EOL', '\n', $patternCode);
 
@@ -732,7 +735,7 @@ abstract class PHP_CodeSniffer_Standards_AbstractPatternSniff implements PHP_Cod
     /**
      * Returns the patterns that should be checked.
      *
-     * @return array(string)
+     * @return string[]
      */
     protected abstract function getPatterns();
 
@@ -744,7 +747,7 @@ abstract class PHP_CodeSniffer_Standards_AbstractPatternSniff implements PHP_Cod
      * an arbitary validation that cannot be performed using a pattern, with
      * other pattern tests.
      *
-     * @return array(int)
+     * @return int[]
      * @see processSupplementary()
      */
     protected function registerSupplementary()
@@ -769,7 +772,6 @@ abstract class PHP_CodeSniffer_Standards_AbstractPatternSniff implements PHP_Cod
         PHP_CodeSniffer_File $phpcsFile,
         $stackPtr
     ) {
-         return;
 
     }//end processSupplementary()
 

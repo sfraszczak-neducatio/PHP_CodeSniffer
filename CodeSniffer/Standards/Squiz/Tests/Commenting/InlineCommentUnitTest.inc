@@ -91,7 +91,7 @@ final class MyClass
     final public function test() {}
 }
 
-// Here is some inline example code:
+// 这是一条测试评论
 //     -> One
 //         -> One.One
 //     -> Two
@@ -102,4 +102,15 @@ final class MyClass
             -> One.One
         -> Two
 */
-?>
+
+/**
+ * Comment should be ignored in PHP 5.4.
+ *
+ */
+trait MyTrait {
+
+}
+
+$foo = 'foo'; // Var set to foo.
+
+echo $foo;

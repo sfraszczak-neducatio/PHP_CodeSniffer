@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Manuel Pichler <mapi@manuel-pichler.de>
- * @copyright 2007-2008 Manuel Pichler. All rights reserved.
+ * @copyright 2007-2014 Manuel Pichler. All rights reserved.
  * @license   http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -36,7 +36,7 @@
  * @category  PHP
  * @package   PHP_CodeSniffer
  * @author    Manuel Pichler <mapi@manuel-pichler.de>
- * @copyright 2007-2008 Manuel Pichler. All rights reserved.
+ * @copyright 2007-2014 Manuel Pichler. All rights reserved.
  * @license   http://www.opensource.org/licenses/bsd-license.php  BSD License
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -53,23 +53,23 @@ class Generic_Sniffs_CodeAnalysis_EmptyStatementSniff implements PHP_CodeSniffer
      * @var array
      */
     protected $checkedTokens = array(
-                                T_CATCH   => true,
-                                T_DO      => false,
-                                T_ELSE    => false,
-                                T_ELSEIF  => false,
-                                T_FOR     => false,
-                                T_FOREACH => false,
-                                T_IF      => false,
-                                T_SWITCH  => false,
-                                T_TRY     => false,
-                                T_WHILE   => false,
+                                T_CATCH   => false,
+                                T_DO      => true,
+                                T_ELSE    => true,
+                                T_ELSEIF  => true,
+                                T_FOR     => true,
+                                T_FOREACH => true,
+                                T_IF      => true,
+                                T_SWITCH  => true,
+                                T_TRY     => true,
+                                T_WHILE   => true,
                                );
 
 
     /**
      * Registers the tokens that this sniff wants to listen for.
      *
-     * @return array(integer)
+     * @return int[]
      */
     public function register()
     {

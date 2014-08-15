@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -22,7 +22,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -82,6 +82,7 @@ class Squiz_Sniffs_Commenting_InlineCommentSniff implements PHP_CodeSniffer_Snif
             $ignore = array(
                        T_CLASS,
                        T_INTERFACE,
+                       T_TRAIT,
                        T_FUNCTION,
                        T_PUBLIC,
                        T_PRIVATE,
@@ -123,14 +124,14 @@ class Squiz_Sniffs_Commenting_InlineCommentSniff implements PHP_CodeSniffer_Snif
 
                 // Only error once per comment.
                 if (substr($tokens[$stackPtr]['content'], 0, 3) === '/**') {
-                    $error  = 'Inline doc block comments are not allowed; use "/* Comment */" or "// Comment" instead';
+                    $error = 'Inline doc block comments are not allowed; use "/* Comment */" or "// Comment" instead';
                     $phpcsFile->addError($error, $stackPtr, 'DocBlock');
                 }
             }//end if
         }//end if
 
         if ($tokens[$stackPtr]['content']{0} === '#') {
-            $error  = 'Perl-style comments are not allowed; use "// Comment" instead';
+            $error = 'Perl-style comments are not allowed; use "// Comment" instead';
             $phpcsFile->addError($error, $stackPtr, 'WrongStyle');
         }
 
@@ -223,7 +224,7 @@ class Squiz_Sniffs_Commenting_InlineCommentSniff implements PHP_CodeSniffer_Snif
             return;
         }
 
-        if (preg_match('|[A-Z]|', $commentText[0]) === 0) {
+        if (preg_match('|\p{Lu}|u', $commentText[0]) === 0) {
             $error = 'Inline comments must start with a capital letter';
             $phpcsFile->addError($error, $topComment, 'NotCapital');
         }
@@ -247,25 +248,25 @@ class Squiz_Sniffs_Commenting_InlineCommentSniff implements PHP_CodeSniffer_Snif
             $phpcsFile->addError($error, $stackPtr, 'InvalidEndChar', $data);
         }
 
-        // Finally, the line below the last comment cannot be empty.
-        $start = false;
-        for ($i = ($stackPtr + 1); $i < $phpcsFile->numTokens; $i++) {
-            if ($tokens[$i]['line'] === ($tokens[$stackPtr]['line'] + 1)) {
-                if ($tokens[$i]['code'] !== T_WHITESPACE) {
-                    return;
+        // Finally, the line below the last comment cannot be empty if this inline
+        // comment is on a line by itself.
+        if ($tokens[$previousContent]['line'] < $tokens[$stackPtr]['line']) {
+            $start = false;
+            for ($i = ($stackPtr + 1); $i < $phpcsFile->numTokens; $i++) {
+                if ($tokens[$i]['line'] === ($tokens[$stackPtr]['line'] + 1)) {
+                    if ($tokens[$i]['code'] !== T_WHITESPACE) {
+                        return;
+                    }
+                } else if ($tokens[$i]['line'] > ($tokens[$stackPtr]['line'] + 1)) {
+                    break;
                 }
-            } else if ($tokens[$i]['line'] > ($tokens[$stackPtr]['line'] + 1)) {
-                break;
             }
-        }
 
-        $error = 'There must be no blank line following an inline comment';
-        $phpcsFile->addError($error, $stackPtr, 'SpacingAfter');
+            $error = 'There must be no blank line following an inline comment';
+            $phpcsFile->addError($error, $stackPtr, 'SpacingAfter');
+        }
 
     }//end process()
 
 
 }//end class
-
-
-?>

@@ -155,7 +155,67 @@ function foo($color) {
     }
 }
 
+function returnOverMultipleLines($color) {
+    switch ($color) {
+        case 'red':
+            return someFunction(
+                'multiple',
+                'arguments'
+            );
+            echo $foo;
+        default:
+            return array(
+                'multiline',
+                'array'
+            );
+    }
+}
+
+function test() {
+    return array(
+                'multiline',
+                'array'
+            );
+    echo $foo;
+}
+
+function test(){
+    switch($a) {
+        case 1:
+            if (empty($b))
+                return 0;
+            break;
+        default:
+            return 2;
+    }
+
+    if (empty($a))
+        echo '1';
+    elseif ($empty($b))
+        return 0;
+    else
+        return 1;
+
+    echo "oi";
+    return 1;
+}
+
+switch ($foo) {
+    case 'foo':
+        if ($foo)
+            return $foo;
+        return $bar;
+    default:
+        return $bar;
+}
+
+function foo()
+{
+    return $bar->{$action . 'JsonAction'}();
+}
+
 exit();
+
 
 // Errors are thrown from here down from the exit() above.
 foreach ($vars as $var) {
@@ -175,6 +235,12 @@ class myClass {
     function myFunc() {
         echo 'no error';
     }
+}
+
+function bar() {
+    return function() {
+        echo "1";
+    };
 }
 
 ?>

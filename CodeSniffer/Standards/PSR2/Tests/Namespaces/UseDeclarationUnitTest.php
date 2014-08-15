@@ -7,7 +7,7 @@
  * @category  PHP
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -21,7 +21,7 @@
  * @category  PHP
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -36,20 +36,34 @@ class PSR2_Tests_Namespaces_UseDeclarationUnitTest extends AbstractSniffUnitTest
      * The key of the array should represent the line number and the value
      * should represent the number of errors that should occur on that line.
      *
-     * @return array(int => int)
+     * @param string $testFile The name of the file being tested.
+     *
+     * @return array<int, int>
      */
     public function getErrorList($testFile='')
     {
         switch ($testFile) {
+        case 'UseDeclarationUnitTest.1.inc':
+            // The trait test will only work in PHP versions where traits exist
+            // and will throw errors in earlier versions.
+            if (version_compare(PHP_VERSION, '5.4.0') < 0) {
+                return array(
+                        30  => 2,
+                       );
+            }
+
+            return array();
         case 'UseDeclarationUnitTest.2.inc':
             return array(
                     5  => 1,
                     10 => 2,
                    );
-            break;
+        case 'UseDeclarationUnitTest.3.inc':
+            return array(
+                    5  => 1,
+                   );
         default:
             return array();
-            break;
         }//end switch
 
     }//end getErrorList()
@@ -61,7 +75,7 @@ class PSR2_Tests_Namespaces_UseDeclarationUnitTest extends AbstractSniffUnitTest
      * The key of the array should represent the line number and the value
      * should represent the number of warnings that should occur on that line.
      *
-     * @return array(int => int)
+     * @return array<int, int>
      */
     public function getWarningList()
     {

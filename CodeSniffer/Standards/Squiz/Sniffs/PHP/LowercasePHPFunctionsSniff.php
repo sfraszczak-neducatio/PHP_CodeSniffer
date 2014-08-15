@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -22,7 +22,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -38,26 +38,7 @@ class Squiz_Sniffs_PHP_LowercasePHPFunctionsSniff implements PHP_CodeSniffer_Sni
      */
     public function register()
     {
-        return array(
-                T_ISSET,
-                T_ECHO,
-                T_PRINT,
-                T_RETURN,
-                T_BREAK,
-                T_CONTINUE,
-                T_EMPTY,
-                T_EVAL,
-                T_EXIT,
-                T_LIST,
-                T_UNSET,
-                T_INCLUDE,
-                T_INCLUDE_ONCE,
-                T_REQUIRE,
-                T_REQUIRE_ONCE,
-                T_NEW,
-                T_DECLARE,
-                T_STRING,
-               );
+        return array(T_STRING);
 
     }//end register()
 
@@ -75,21 +56,6 @@ class Squiz_Sniffs_PHP_LowercasePHPFunctionsSniff implements PHP_CodeSniffer_Sni
     {
         $tokens = $phpcsFile->getTokens();
 
-        if ($tokens[$stackPtr]['code'] !== T_STRING) {
-            $content = $tokens[$stackPtr]['content'];
-            if ($content !== strtolower($content)) {
-                $error = '%s keyword must be lowercase; expected "%s" but found "%s"';
-                $data  = array(
-                          strtoupper($content),
-                          strtolower($content),
-                          $content,
-                         );
-                $phpcsFile->addError($error, $stackPtr, 'KeywordUppercase', $data);
-            }
-
-            return;
-        }
-
         // Make sure this is a function call.
         $next = $phpcsFile->findNext(T_WHITESPACE, ($stackPtr + 1), null, true);
         if ($next === false) {
@@ -102,12 +68,17 @@ class Squiz_Sniffs_PHP_LowercasePHPFunctionsSniff implements PHP_CodeSniffer_Sni
             return;
         }
 
-        $prev = $phpcsFile->findPrevious(T_WHITESPACE, ($stackPtr - 1), null, true);
+        $prev = $phpcsFile->findPrevious(array(T_WHITESPACE, T_BITWISE_AND), ($stackPtr - 1), null, true);
         if ($tokens[$prev]['code'] === T_FUNCTION) {
             // Function declaration, not a function call.
             return;
         }
-
+        
+        if ($tokens[$prev]['code'] === T_NS_SEPARATOR) {
+            // Namespaced class/function, not an inbuilt function.
+            return;
+        }
+        
         if ($tokens[$prev]['code'] === T_NEW) {
             // Object creation, not an inbuilt function.
             return;

@@ -105,9 +105,26 @@ $boo = -$foo;
 function foo($boo = -1) {}
 $foo = array('boo' => -1);
 $x = $test ? -1 : 1;
+$y = $test ? 1 : -1;
+$z = $test ?: false;
+
+$closureWithDefaultParamter = function (array $testArray=array()) {};
 
 switch ($foo) {
 	case -1:
 		break;
 }
+
+$y = 1 * -1;
+$y = -1 * 1;
+$y = -1 * $var;
+$y = 10 / -2;
+$y = -10 / 2;
+$y = (-10 / 2);
+$y = (-10 / $var);
+$y = 10 + -2;
+$y = -10 + 2;
+
+$a = $x?$y:$z;
+$a = $x ? $y : $z;
 ?>

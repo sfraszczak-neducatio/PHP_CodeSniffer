@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -22,7 +22,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -59,7 +59,7 @@ class Squiz_Sniffs_Commenting_BlockCommentSniff implements PHP_CodeSniffer_Sniff
     {
         $tokens = $phpcsFile->getTokens();
 
-        // If its an inline comment return.
+        // If it's an inline comment, return.
         if (substr($tokens[$stackPtr]['content'], 0, 2) !== '/*') {
             return;
         }
@@ -71,6 +71,7 @@ class Squiz_Sniffs_Commenting_BlockCommentSniff implements PHP_CodeSniffer_Sniff
             $ignore    = array(
                           T_CLASS,
                           T_INTERFACE,
+                          T_TRAIT,
                           T_FUNCTION,
                           T_PUBLIC,
                           T_PRIVATE,
@@ -152,16 +153,16 @@ class Squiz_Sniffs_Commenting_BlockCommentSniff implements PHP_CodeSniffer_Sniff
                 $phpcsFile->addError($error, $commentLines[1], 'FirstLineIndent', $data);
             }
 
-            if (preg_match('|[A-Z]|', $commentText[0]) === 0) {
+            if (preg_match('|\p{Lu}|u', $commentText[0]) === 0) {
                 $error = 'Block comments must start with a capital letter';
-                $phpcsFile->addError($error, $commentLines[1], 'NoCaptial');
+                $phpcsFile->addError($error, $commentLines[1], 'NoCapital');
             }
         }
 
         // Check that each line of the comment is indented past the star.
         foreach ($commentLines as $line) {
             $leadingSpace = (strlen($tokens[$line]['content']) - strlen(ltrim($tokens[$line]['content'])));
-            // First and last lines (comment opener and closer) are handled seperately.
+            // First and last lines (comment opener and closer) are handled separately.
             if ($line === $commentLines[(count($commentLines) - 1)] || $line === $commentLines[0]) {
                 continue;
             }
@@ -215,7 +216,9 @@ class Squiz_Sniffs_Commenting_BlockCommentSniff implements PHP_CodeSniffer_Sniff
 
         // Check that the lines before and after this comment are blank.
         $contentBefore = $phpcsFile->findPrevious(T_WHITESPACE, ($stackPtr - 1), null, true);
-        if (isset($tokens[$contentBefore]['scope_closer']) === true) {
+        if (isset($tokens[$contentBefore]['scope_closer']) === true
+            && $tokens[$contentBefore]['scope_opener'] === $contentBefore
+        ) {
             if (($tokens[$stackPtr]['line'] - $tokens[$contentBefore]['line']) !== 1) {
                 $error = 'Empty line not required before block comment';
                 $phpcsFile->addError($error, $stackPtr, 'HasEmptyLineBefore');
@@ -229,7 +232,7 @@ class Squiz_Sniffs_Commenting_BlockCommentSniff implements PHP_CodeSniffer_Sniff
 
         $commentCloser = $commentLines[$lastIndex];
         $contentAfter  = $phpcsFile->findNext(T_WHITESPACE, ($commentCloser + 1), null, true);
-        if (($tokens[$contentAfter]['line'] - $tokens[$commentCloser]['line']) < 2) {
+        if ($contentAfter !== false && ($tokens[$contentAfter]['line'] - $tokens[$commentCloser]['line']) < 2) {
             $error = 'Empty line required after block comment';
             $phpcsFile->addError($error, $commentCloser, 'NoEmptyLineAfter');
         }

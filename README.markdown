@@ -3,7 +3,7 @@ About
 
 PHP\_CodeSniffer is a PHP5 script that tokenises PHP, JavaScript and CSS files to detect violations of a defined coding standard. It is an essential development tool that ensures your code remains clean and consistent. It can also help prevent some common semantic errors made by developers.
 
-[![Build Status](https://secure.travis-ci.org/squizlabs/PHP_CodeSniffer.png)](http://travis-ci.org/squizlabs/PHP_CodeSniffer)
+[![Build Status](https://travis-ci.org/squizlabs/PHP_CodeSniffer.svg?branch=master)](https://travis-ci.org/squizlabs/PHP_CodeSniffer) [![Code consistency](http://squizlabs.github.io/PHP_CodeSniffer/analysis/squizlabs/PHP_CodeSniffer/grade.svg)](http://squizlabs.github.io/PHP_CodeSniffer/analysis/squizlabs/PHP_CodeSniffer)
 
 Requirements
 ------------
@@ -19,7 +19,25 @@ The easiest way to install PHP\_CodeSniffer is to use the PEAR installer. This w
 
     pear install PHP_CodeSniffer
 
-If you don't want to install PEAR, you can download the PHP\_CodeSniffer source and run the `phpcs` command directly from the GIT checkout:
+If you prefer using [Composer](http://getcomposer.org/) you can easily install PHP_CodeSniffer system-wide with the following command:
+
+    composer global require "squizlabs/php_codesniffer=*"
+
+Make sure you have `~/.composer/vendor/bin/` in your PATH.
+
+Or alternatively, include a dependency for `squizlabs/php_codesniffer` in your `composer.json` file. For example:
+
+    {
+        "require-dev": {
+            "squizlabs/php_codesniffer": "1.*"
+        }
+    }
+
+You will then be able to run PHP_CodeSniffer from the vendor bin directory:
+
+    ./vendor/bin/phpcs -h
+
+You can also download the PHP\_CodeSniffer source and run the `phpcs` command directly from the GIT checkout:
 
     git clone git://github.com/squizlabs/PHP_CodeSniffer.git
     cd PHP_CodeSniffer
@@ -28,7 +46,7 @@ If you don't want to install PEAR, you can download the PHP\_CodeSniffer source 
 Documentation
 -------------
 
-The documentation for PHP\_CodeSniffer is available in the [PEAR manual](http://pear.php.net/manual/en/package.php.php-codesniffer.php).
+The documentation for PHP\_CodeSniffer is available on the [Github wiki](https://github.com/squizlabs/PHP_CodeSniffer/wiki).
 
 Information about upcoming features and releases is available on the [Squiz Labs blog](http://www.squizlabs.com/php-codesniffer).
 

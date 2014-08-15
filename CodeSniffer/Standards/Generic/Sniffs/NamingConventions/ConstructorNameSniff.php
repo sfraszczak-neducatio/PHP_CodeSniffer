@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Leif Wickland <lwickland@rightnow.com>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -77,6 +77,11 @@ class Generic_Sniffs_NamingConventions_ConstructorNameSniff extends PHP_CodeSnif
 
         $parentClassName = $phpcsFile->findExtendedClassName($currScope);
         if ($parentClassName === false) {
+            return;
+        }
+
+        // Stop if the constructor doesn't have a body, like when it is abstract.
+        if (isset($tokens[$stackPtr]['scope_closer']) === false) {
             return;
         }
 

@@ -19,3 +19,13 @@ $var = new MyClass(
         return true;
     }
 );
+
+class Container extends Component implements IContainer
+{
+    use TContainer;
+}
+
+trait HelloWorld
+{
+    use Hello, World;
+}

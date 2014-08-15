@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -22,7 +22,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -51,8 +51,14 @@ class Squiz_Sniffs_WhiteSpace_OperatorSpacingSniff implements PHP_CodeSniffer_Sn
         $comparison = PHP_CodeSniffer_Tokens::$comparisonTokens;
         $operators  = PHP_CodeSniffer_Tokens::$operators;
         $assignment = PHP_CodeSniffer_Tokens::$assignmentTokens;
+        $inlineIf   = array(
+                       T_INLINE_THEN,
+                       T_INLINE_ELSE,
+                      );
 
-        return array_unique(array_merge($comparison, $operators, $assignment));
+        return array_unique(
+            array_merge($comparison, $operators, $assignment, $inlineIf)
+        );
 
     }//end register()
 
@@ -61,8 +67,8 @@ class Squiz_Sniffs_WhiteSpace_OperatorSpacingSniff implements PHP_CodeSniffer_Sn
      * Processes this sniff, when one of its tokens is encountered.
      *
      * @param PHP_CodeSniffer_File $phpcsFile The current file being checked.
-     * @param int                  $stackPtr  The position of the current token in the
-     *                                        stack passed in $tokens.
+     * @param int                  $stackPtr  The position of the current token in
+     *                                        the stack passed in $tokens.
      *
      * @return void
      */
@@ -79,7 +85,9 @@ class Squiz_Sniffs_WhiteSpace_OperatorSpacingSniff implements PHP_CodeSniffer_Sn
                 $bracket     = array_pop($parenthesis);
                 if (isset($tokens[$bracket]['parenthesis_owner']) === true) {
                     $function = $tokens[$bracket]['parenthesis_owner'];
-                    if ($tokens[$function]['code'] === T_FUNCTION) {
+                    if ($tokens[$function]['code'] === T_FUNCTION
+                        || $tokens[$function]['code'] === T_CLOSURE
+                    ) {
                         return;
                     }
                 }
@@ -88,9 +96,20 @@ class Squiz_Sniffs_WhiteSpace_OperatorSpacingSniff implements PHP_CodeSniffer_Sn
 
         if ($tokens[$stackPtr]['code'] === T_EQUAL) {
             // Skip for '=&' case.
-            if (isset($tokens[($stackPtr + 1)]) === true && $tokens[($stackPtr + 1)]['code'] === T_BITWISE_AND) {
+            if (isset($tokens[($stackPtr + 1)]) === true
+                && $tokens[($stackPtr + 1)]['code'] === T_BITWISE_AND
+            ) {
                 return;
             }
+        }
+
+        // Skip short ternary such as: $foo = $bar ?: true;
+        if (($tokens[$stackPtr]['code'] == T_INLINE_THEN
+            && $tokens[$stackPtr + 1]['code'] == T_INLINE_ELSE)
+            || ($tokens[$stackPtr - 1]['code'] == T_INLINE_THEN
+            && $tokens[$stackPtr]['code'] == T_INLINE_ELSE)
+        ) {
+                return;
         }
 
         if ($tokens[$stackPtr]['code'] === T_BITWISE_AND) {
@@ -134,7 +153,7 @@ class Squiz_Sniffs_WhiteSpace_OperatorSpacingSniff implements PHP_CodeSniffer_Sn
             // a minus value or returning one.
             $prev = $phpcsFile->findPrevious(T_WHITESPACE, ($stackPtr - 1), null, true);
             if ($tokens[$prev]['code'] === T_RETURN) {
-                // Just returning a negative value; eg. return -1.
+                // Just returning a negative value; eg. (return -1).
                 return;
             }
 
@@ -148,6 +167,11 @@ class Squiz_Sniffs_WhiteSpace_OperatorSpacingSniff implements PHP_CodeSniffer_Sn
                 return;
             }
 
+            if (in_array($tokens[$prev]['code'], PHP_CodeSniffer_Tokens::$assignmentTokens) === true) {
+                // Just trying to assign a negative value; eg. ($var = -1).
+                return;
+            }
+
             // A list of tokens that indicate that the token is not
             // part of an arithmetic operation.
             $invalidTokens = array(
@@ -157,23 +181,13 @@ class Squiz_Sniffs_WhiteSpace_OperatorSpacingSniff implements PHP_CodeSniffer_Sn
                               T_DOUBLE_ARROW,
                               T_COLON,
                               T_INLINE_THEN,
+                              T_INLINE_ELSE,
                               T_CASE,
                              );
 
             if (in_array($tokens[$prev]['code'], $invalidTokens) === true) {
                 // Just trying to use a negative value; eg. myFunction($var, -2).
                 return;
-            }
-
-            $number = $phpcsFile->findNext(T_WHITESPACE, ($stackPtr + 1), null, true);
-            if (in_array($tokens[$number]['code'], array(T_LNUMBER, T_VARIABLE)) === true) {
-                $semi = $phpcsFile->findNext(T_WHITESPACE, ($number + 1), null, true);
-                if ($tokens[$semi]['code'] === T_SEMICOLON) {
-                    if ($prev !== false && (in_array($tokens[$prev]['code'], PHP_CodeSniffer_Tokens::$assignmentTokens) === true)) {
-                        // This is a negative assignment.
-                        return;
-                    }
-                }
             }
         }//end if
 

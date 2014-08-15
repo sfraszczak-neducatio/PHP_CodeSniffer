@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -23,7 +23,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -106,10 +106,35 @@ class Generic_Sniffs_PHP_ForbiddenFunctionsSniff implements PHP_CodeSniffer_Snif
                    T_OBJECT_OPERATOR,
                    T_FUNCTION,
                    T_CONST,
+                   T_PUBLIC,
+                   T_PRIVATE,
+                   T_PROTECTED,
+                   T_AS,
+                   T_NEW,
+                   T_INSTEADOF,
+                   T_NS_SEPARATOR,
+                   T_IMPLEMENTS,
                   );
 
         $prevToken = $phpcsFile->findPrevious(T_WHITESPACE, ($stackPtr - 1), null, true);
+
+        // If function call is directly preceded by a NS_SEPARATOR it points to the
+        // global namespace, so we should still catch it.
+        if ($tokens[$prevToken]['code'] === T_NS_SEPARATOR) {
+            $prevToken = $phpcsFile->findPrevious(T_WHITESPACE, ($prevToken - 1), null, true);
+            if ($tokens[$prevToken]['code'] === T_STRING) {
+                // Not in the global namespace.
+                return;
+            }
+        }
+
         if (in_array($tokens[$prevToken]['code'], $ignore) === true) {
+            // Not a call to a PHP function.
+            return;
+        }
+
+        $nextToken = $phpcsFile->findNext(T_WHITESPACE, ($stackPtr + 1), null, true);
+        if (in_array($tokens[$nextToken]['code'], $ignore) === true) {
             // Not a call to a PHP function.
             return;
         }
@@ -145,7 +170,7 @@ class Generic_Sniffs_PHP_ForbiddenFunctionsSniff implements PHP_CodeSniffer_Snif
 
 
     /**
-     * Generates the error or wanrning for this sniff.
+     * Generates the error or warning for this sniff.
      *
      * @param PHP_CodeSniffer_File $phpcsFile The file being scanned.
      * @param int                  $stackPtr  The position of the forbidden function

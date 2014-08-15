@@ -8,13 +8,13 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Manuel Pichler <mapi@manuel-pichler.de>
- * @copyright 2007-2008 Manuel Pichler. All rights reserved.
+ * @copyright 2007-2014 Manuel Pichler. All rights reserved.
  * @license   http://www.opensource.org/licenses/bsd-license.php BSD License
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
 
 /**
- * Detects unnecessary overriden methods that simply call their parent.
+ * Detects unnecessary overridden methods that simply call their parent.
  *
  * This rule is based on the PMD rule catalog. The Useless Overriding Method
  * sniff detects the use of methods that only call their parent classes's method
@@ -31,7 +31,7 @@
  * @category  PHP
  * @package   PHP_CodeSniffer
  * @author    Manuel Pichler <mapi@manuel-pichler.de>
- * @copyright 2007-2008 Manuel Pichler. All rights reserved.
+ * @copyright 2007-2014 Manuel Pichler. All rights reserved.
  * @license   http://www.opensource.org/licenses/bsd-license.php BSD License
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -43,7 +43,7 @@ class Generic_Sniffs_CodeAnalysis_UselessOverridingMethodSniff implements PHP_Co
     /**
      * Registers the tokens that this sniff wants to listen for.
      *
-     * @return array(integer)
+     * @return int[]
      */
     public function register()
     {
@@ -169,7 +169,7 @@ class Generic_Sniffs_CodeAnalysis_UselessOverridingMethodSniff implements PHP_Co
         $parameters = array_filter($parameters);
 
         if (count($parameters) === count($signature) && $parameters === $signature) {
-            $phpcsFile->addWarning('Useless method overriding detected', $stackPtr, 'Found');
+            $phpcsFile->addWarning('Possible useless method overriding detected', $stackPtr, 'Found');
         }
 
     }//end process()

@@ -8,12 +8,10 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
-
-require_once 'PHPUnit/Framework/TestCase.php';
 
 /**
  * An abstract class that all sniff unit tests must extend.
@@ -26,7 +24,7 @@ require_once 'PHPUnit/Framework/TestCase.php';
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -87,8 +85,9 @@ abstract class AbstractSniffUnitTest extends PHPUnit_Framework_TestCase
         // The name of the coding standard we are testing.
         $standardName = substr($basename, 0, strpos($basename, '_'));
 
-        // The class name of the sniff we are testing.
-        $sniffClass = str_replace('_Tests_', '_Sniffs_', $basename).'Sniff';
+        // The code of the sniff we are testing.
+        $parts     = explode('_', $basename);
+        $sniffCode = $parts[0].'.'.$parts[2].'.'.$parts[3];
 
         if (is_file(dirname(__FILE__).'/../../CodeSniffer.php') === true) {
             // We have not been installed.
@@ -100,8 +99,7 @@ abstract class AbstractSniffUnitTest extends PHPUnit_Framework_TestCase
         }
 
         // Get a list of all test files to check. These will have the same base
-        // name but different extensions. We ignore the .php file as it is the
-        // class.
+        // name but different extensions. We ignore the .php file as it is the class.
         $testFiles = array();
 
         $dir = substr($testFileBase, 0, strrpos($testFileBase, DIRECTORY_SEPARATOR));
@@ -116,68 +114,23 @@ abstract class AbstractSniffUnitTest extends PHPUnit_Framework_TestCase
             }
         }
 
-        // Get them in order. This is particularly important for multi-file sniffs.
+        // Get them in order.
         sort($testFiles);
 
+        self::$phpcs->process(array(), $standardName, array($sniffCode));
+        self::$phpcs->setIgnorePatterns(array());
+
         $failureMessages = array();
-        $multiFileSniff  = false;
         foreach ($testFiles as $testFile) {
             try {
-                self::$phpcs->process(array(), $standardName, array($sniffClass));
-                self::$phpcs->setIgnorePatterns(array());
-                self::$phpcs->processFile($testFile);
-                self::$phpcs->processMulti();
+                $phpcsFile = self::$phpcs->processFile($testFile);
             } catch (Exception $e) {
                 $this->fail('An unexpected exception has been caught: '.$e->getMessage());
             }
 
-            // After processing a file, check if the sniff was actually
-            // a multi-file sniff (i.e., had no individual file sniffs).
-            // If it is, we can skip checking of the other files and
-            // do a single multi-file check.
-            $sniffs = self::$phpcs->getTokenSniffs();
-            if (empty($sniffs['file']) === true) {
-                $multiFileSniff = true;
-                break;
-            }
-
-            $files = self::$phpcs->getFiles();
-            if (empty($files) === true) {
-                // File was skipped for some reason.
-                echo "Skipped: $testFile\n";
-                $this->markTestSkipped();
-            }
-
-            $file = array_pop($files);
-
-            $failures        = $this->generateFailureMessages($file);
+            $failures        = $this->generateFailureMessages($phpcsFile);
             $failureMessages = array_merge($failureMessages, $failures);
         }//end foreach
-
-        if ($multiFileSniff === true) {
-            try {
-                self::$phpcs->process(array(), $standardName, array($sniffClass));
-                self::$phpcs->setIgnorePatterns(array());
-                foreach ($testFiles as $testFile) {
-                    self::$phpcs->processFile($testFile);
-                }
-
-                self::$phpcs->processMulti();
-            } catch (Exception $e) {
-                $this->fail('An unexpected exception has been caught: '.$e->getMessage());
-            }
-
-            $files = self::$phpcs->getFiles();
-            if (empty($files) === true) {
-                // File was skipped for some reason.
-                $this->markTestSkipped();
-            } else {
-                foreach ($files as $file) {
-                    $failures        = $this->generateFailureMessages($file);
-                    $failureMessages = array_merge($failureMessages, $failures);
-                }
-            }
-        }//end if
 
         if (empty($failureMessages) === false) {
             $this->fail(implode(PHP_EOL, $failureMessages));

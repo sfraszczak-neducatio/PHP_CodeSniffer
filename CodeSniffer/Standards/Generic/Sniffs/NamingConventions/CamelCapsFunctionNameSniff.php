@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -27,7 +27,7 @@ if (class_exists('PHP_CodeSniffer_Standards_AbstractScopeSniff', true) === false
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -59,6 +59,27 @@ class Generic_Sniffs_NamingConventions_CamelCapsFunctionNameSniff extends PHP_Co
                               );
 
     /**
+     * A list of all PHP non-magic methods starting with a double underscore.
+     *
+     * These come from PHP modules such as SOAPClient.
+     *
+     * @var array
+     */
+    protected $methodsDoubleUnderscore = array(
+                                          'soapcall',
+                                          'getlastrequest',
+                                          'getlastresponse',
+                                          'getlastrequestheaders',
+                                          'getlastresponseheaders',
+                                          'getfunctions',
+                                          'gettypes',
+                                          'dorequest',
+                                          'setcookie',
+                                          'setlocation',
+                                          'setsoapheaders',
+                                         );
+
+    /**
      * A list of all PHP magic functions.
      *
      * @var array
@@ -66,7 +87,7 @@ class Generic_Sniffs_NamingConventions_CamelCapsFunctionNameSniff extends PHP_Co
     protected $magicFunctions = array('autoload');
 
     /**
-     * If TRUE, the string must not have two captial letters next to each other.
+     * If TRUE, the string must not have two capital letters next to each other.
      *
      * @var bool
      */
@@ -107,7 +128,7 @@ class Generic_Sniffs_NamingConventions_CamelCapsFunctionNameSniff extends PHP_Co
         // Is this a magic method. i.e., is prefixed with "__" ?
         if (preg_match('|^__|', $methodName) !== 0) {
             $magicPart = strtolower(substr($methodName, 2));
-            if (in_array($magicPart, $this->magicMethods) === false) {
+            if (in_array($magicPart, array_merge($this->magicMethods, $this->methodsDoubleUnderscore)) === false) {
                  $error = 'Method name "%s" is invalid; only PHP magic methods should be prefixed with a double underscore';
                  $phpcsFile->addError($error, $stackPtr, 'MethodDoubleUnderscore', $errorData);
             }

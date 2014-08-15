@@ -7,7 +7,7 @@
  * @category  PHP
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -21,7 +21,7 @@
  * @category  PHP
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -77,7 +77,7 @@ class PSR1_Sniffs_Files_SideEffectsSniff implements PHP_CodeSniffer_Sniff
     /**
      * Searches for symbol declarations and side effects.
      *
-     * Returns the positions of both the first symbol declaraed and the first
+     * Returns the positions of both the first symbol declared and the first
      * side effect in the file. A NULL value for either indicates nothing was
      * found.
      *
@@ -99,10 +99,10 @@ class PSR1_Sniffs_Files_SideEffectsSniff implements PHP_CodeSniffer_Sniff
                    );
 
         $conditions = array(
-                      T_IF,
-                      T_ELSE,
-                      T_ELSEIF,
-                     );
+                       T_IF,
+                       T_ELSE,
+                       T_ELSEIF,
+                      );
 
         $firstSymbol = null;
         $firstEffect = null;
@@ -119,7 +119,7 @@ class PSR1_Sniffs_Files_SideEffectsSniff implements PHP_CodeSniffer_Sniff
                 continue;
             }
 
-            // Ignore entire namespace and use statements.
+            // Ignore entire namespace, const and use statements.
             if ($tokens[$i]['code'] === T_NAMESPACE) {
                 $next = $phpcsFile->findNext(array(T_SEMICOLON, T_OPEN_CURLY_BRACKET), ($i + 1));
                 if ($next === false) {
@@ -130,8 +130,14 @@ class PSR1_Sniffs_Files_SideEffectsSniff implements PHP_CodeSniffer_Sniff
 
                 $i = $next;
                 continue;
-            } else if ($tokens[$i]['code'] === T_USE) {
-                $i = $phpcsFile->findNext(T_SEMICOLON, ($i + 1));
+            } else if ($tokens[$i]['code'] === T_USE
+                || $tokens[$i]['code'] === T_CONST
+            ) {
+                $semicolon = $phpcsFile->findNext(T_SEMICOLON, ($i + 1));
+                if ($semicolon !== false) {
+                    $i = $semicolon;
+                }
+
                 continue;
             }
 
@@ -141,7 +147,9 @@ class PSR1_Sniffs_Files_SideEffectsSniff implements PHP_CodeSniffer_Sniff
             }
 
             // Detect and skip over symbols.
-            if (in_array($tokens[$i]['code'], $symbols) === true) {
+            if (in_array($tokens[$i]['code'], $symbols) === true
+                && isset($tokens[$i]['scope_closer']) === true
+            ) {
                 if ($firstSymbol === null) {
                     $firstSymbol = $i;
                 }
@@ -151,12 +159,15 @@ class PSR1_Sniffs_Files_SideEffectsSniff implements PHP_CodeSniffer_Sniff
             } else if ($tokens[$i]['code'] === T_STRING
                 && strtolower($tokens[$i]['content']) === 'define'
             ) {
-                if ($firstSymbol === null) {
-                    $firstSymbol = $i;
-                }
+                $prev = $phpcsFile->findPrevious(T_WHITESPACE, ($i - 1), null, true);
+                if ($tokens[$prev]['code'] !== T_OBJECT_OPERATOR) {
+                    if ($firstSymbol === null) {
+                        $firstSymbol = $i;
+                    }
 
-                $i = $phpcsFile->findNext(T_SEMICOLON, ($i + 1));
-                continue;
+                    $i = $phpcsFile->findNext(T_SEMICOLON, ($i + 1));
+                    continue;
+                }
             }
 
             // Conditional statements are allowed in symbol files as long as the

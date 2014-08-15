@@ -8,7 +8,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @link      http://pear.php.net/package/PHP_CodeSniffer
  */
@@ -24,7 +24,7 @@
  * @package   PHP_CodeSniffer
  * @author    Greg Sherwood <gsherwood@squiz.net>
  * @author    Marc McIntyre <mmcintyre@squiz.net>
- * @copyright 2006-2012 Squiz Pty Ltd (ABN 77 084 670 600)
+ * @copyright 2006-2014 Squiz Pty Ltd (ABN 77 084 670 600)
  * @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.txt BSD Licence
  * @version   Release: @package_version@
  * @link      http://pear.php.net/package/PHP_CodeSniffer
@@ -42,6 +42,16 @@ class Squiz_Sniffs_WhiteSpace_SuperfluousWhitespaceSniff implements PHP_CodeSnif
                                    'JS',
                                    'CSS',
                                   );
+
+    /**
+     * If TRUE, whitespace rules are not checked for blank lines.
+     *
+     * Blank lines are those that contain only whitespace.
+     *
+     * @var boolean
+     */
+    public $ignoreBlankLines = false;
+
 
     /**
      * Returns an array of tokens this test wants to listen for.
@@ -116,25 +126,20 @@ class Squiz_Sniffs_WhiteSpace_SuperfluousWhitespaceSniff implements PHP_CodeSnif
             */
 
             if ($phpcsFile->tokenizerType === 'JS') {
-                // The last token is always the close tag inserted when tokenizsed
+                // The last token is always the close tag inserted when tokenized
                 // and the second last token is always the last piece of content in
                 // the file. If the second last token is whitespace, there was
                 // whitespace at the end of the file.
-                if ($tokens[($stackPtr - 1)]['code'] !== T_WHITESPACE) {
-                    return;
-                }
+                $stackPtr--;
             } else if ($phpcsFile->tokenizerType === 'CSS') {
                 // The last two tokens are always the close tag and whitespace
                 // inserted when tokenizsed and the third last token is always the
                 // last piece of content in the file. If the third last token is
                 // whitespace, there was whitespace at the end of the file.
-                if ($tokens[($stackPtr - 3)]['code'] !== T_WHITESPACE) {
-                    return;
-                }
-
-                // Adjust the pointer to give the correct line number for the error.
                 $stackPtr -= 2;
-            } else {
+            }
+
+            if ($phpcsFile->tokenizerType === 'PHP') {
                 if (isset($tokens[($stackPtr + 1)]) === false) {
                     // The close PHP token is the last in the file.
                     return;
@@ -154,6 +159,20 @@ class Squiz_Sniffs_WhiteSpace_SuperfluousWhitespaceSniff implements PHP_CodeSnif
                         return;
                     }
                 }
+            } else {
+                // The pointer is now looking at the last content in the file and
+                // not the fake PHP end tag the tokenizer inserted.
+                if ($tokens[$stackPtr]['code'] !== T_WHITESPACE) {
+                    return;
+                }
+
+                // Allow a single newline at the end of the last line in the file.
+                if ($tokens[($stackPtr - 1)]['code'] !== T_WHITESPACE
+                    && $tokens[$stackPtr]['content'] === $phpcsFile->eolChar
+                ) {
+                    return;
+                }
+
             }
 
             $phpcsFile->addError('Additional whitespace found at end of file', $stackPtr, 'EndFile');
@@ -164,13 +183,21 @@ class Squiz_Sniffs_WhiteSpace_SuperfluousWhitespaceSniff implements PHP_CodeSnif
                 Check for end of line whitespace.
             */
 
+            // Ignore whitespace that is not at the end of a line.
             if (strpos($tokens[$stackPtr]['content'], $phpcsFile->eolChar) === false) {
+                return;
+            }
+
+            // Ignore blank lines if required.
+            if ($this->ignoreBlankLines === true
+                && $tokens[($stackPtr - 1)]['line'] !== $tokens[$stackPtr]['line']
+            ) {
                 return;
             }
 
             $tokenContent = rtrim($tokens[$stackPtr]['content'], $phpcsFile->eolChar);
             if (empty($tokenContent) === false) {
-                if (preg_match('|^.*\s+$|', $tokenContent) !== 0) {
+                if ($tokenContent !== rtrim($tokenContent)) {
                     $phpcsFile->addError('Whitespace found at end of line', $stackPtr, 'EndLine');
                 }
             }
